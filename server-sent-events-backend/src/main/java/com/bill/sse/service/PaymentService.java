@@ -1,5 +1,6 @@
-package com.bill.payment;
+package com.bill.sse.service;
 
+import com.bill.sse.vo.PaymentEvent;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Sinks;
@@ -29,25 +30,13 @@ public class PaymentService {
     
     // 通知付款成功
     public void notifyPaymentSuccess(String orderId) {
-        PaymentEvent event = PaymentEvent.builder()
-                .eventType("PAYMENT_STATUS")
-                .orderId(orderId)
-                .status("SUCCESS")
-                .message("付款已成功完成")
-                .timestamp(System.currentTimeMillis())
-                .build();
+        PaymentEvent event = PaymentEvent.createSuccessEvent(orderId, null);
         publishPaymentEvent(event);
     }
     
     // 通知付款失敗
     public void notifyPaymentFailure(String orderId, String reason) {
-        PaymentEvent event = PaymentEvent.builder()
-                .eventType("PAYMENT_STATUS")
-                .orderId(orderId)
-                .status("FAILURE")
-                .message("付款失敗: " + reason)
-                .timestamp(System.currentTimeMillis())
-                .build();
+        PaymentEvent event = PaymentEvent.createFailureEvent(orderId, reason);
         publishPaymentEvent(event);
     }
 }

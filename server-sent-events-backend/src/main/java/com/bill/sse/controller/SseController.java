@@ -1,5 +1,7 @@
-package com.bill.payment;
+package com.bill.sse.controller;
 
+import com.bill.sse.vo.PaymentEvent;
+import com.bill.sse.service.PaymentService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.CrossOrigin;

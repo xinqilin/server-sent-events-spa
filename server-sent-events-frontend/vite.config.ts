@@ -17,4 +17,8 @@ export default defineConfig({
       '@': fileURLToPath(new URL('./src', import.meta.url))
     },
   },
+  server: {
+    port: 8888,
+    strictPort: true, // 如果端口已被占用，則報錯而不是嘗試下一個可用端口
+  },
 })

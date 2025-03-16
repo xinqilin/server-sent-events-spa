@@ -1,52 +1,51 @@
-# Server-Sent Events 第三方支付示範系統
+# Server-Sent Events 第三方付款示範系統
 
- Server-Sent Events (SSE) 模擬第三方支付系統。
- 主要用於展示當用戶從原始頁面跳轉到第三方支付頁面後，如何將支付結果即時通知回原頁面。
+這是一個使用 Server-Sent Events (SSE) 實現的模擬第三方付款系統，展示了如何在不同頁面間通過 SSE 進行即時通訊。主要用於展示當使用者從原始頁面跳轉到第三方付款頁面後，如何將付款結果即時通知回原頁面。
 
 ## 系統架構
 
 本系統由以下兩個主要部分組成：
 
-- **Frontend**: Vue 3 + TypeScript + Pinia 
-- **Backend**: Spring Boot 3 + WebFlux 
+- **Frontend**: Vue 3 + TypeScript + Pinia 實現的單頁面應用
+- **Backend**: Spring Boot 3 + WebFlux 實現的響應式後端服務
 
 ## 系統流程
 
-整個支付流程如下圖所示：
+整個付款流程如下圖所示：
 
 ```mermaid
 sequenceDiagram
-    participant A as User 頁面 (A)
+    participant A as 使用者頁面 (A)
     participant F as 前端 (Vue)
     participant B as 後端 (Spring Boot)
-    participant P as 第三方金流頁面 (B)
+    participant P as 第三方付款頁面 (B)
     
     A->>F: 點擊「付款」按鈕
-    F->>B: 初始化支付請求 POST /api/payment/initialize
-    B->>B: 創建訂單記錄
-    B->>F: 返回訂單ID和支付URL
+    F->>B: 初始化付款請求 POST /api/payment/initialize
+    B->>B: 建立訂單記錄
+    B->>F: 返回訂單ID和付款URL
     F->>F: 開啟 EventSource 連接 GET /api/sse/payment-events
-    F->>P: window.open() 打開支付頁面
+    F->>P: window.open() 開啟付款頁面
     
     Note over F,B: SSE 連接保持開啟
     
-    P->>+B: 用戶操作支付頁面（確認/取消）
-    B->>B: 處理支付結果
-    B->>-F: 通過 SSE 發送支付結果
-    F->>A: 更新頁面顯示支付結果
+    P->>+B: 使用者操作付款頁面（確認/取消）
+    B->>B: 處理付款結果
+    B->>-F: 通過 SSE 發送付款結果
+    F->>A: 更新頁面顯示付款結果
 ```
 
 ### 詳細流程說明
 
-1. 用戶在頁面 A 點擊「付款」按鈕
-2. 前端向後端發送初始化支付請求
-3. 後端創建訂單並返回訂單信息和支付頁面 URL
+1. 使用者在頁面 A 點擊「付款」按鈕
+2. 前端向後端發送初始化付款請求
+3. 後端建立訂單並返回訂單資訊和付款頁面 URL
 4. 前端使用 EventSource API 與後端建立 SSE 連接
-5. 前端使用 window.open() 打開新窗口顯示第三方支付頁面 B
-6. 用戶在支付頁面 B 進行操作（確認付款或取消付款）
-7. 支付頁面 B 向後端發送支付結果
+5. 前端使用 window.open() 開啟新視窗顯示第三方付款頁面 B
+6. 使用者在付款頁面 B 進行操作（確認付款或取消付款）
+7. 付款頁面 B 向後端發送付款結果
 8. 後端更新訂單狀態並通過 SSE 連接將結果推送給頁面 A
-9. 頁面 A 收到結果後更新界面顯示支付結果
+9. 頁面 A 收到結果後更新介面顯示付款結果
 
 ## 前端實現 (Frontend)
 
@@ -61,7 +60,7 @@ sequenceDiagram
 
 #### Pinia Store
 
-`/src/stores/payment.ts` 是整個前端的核心，負責管理支付狀態和 SSE 連接：
+`/src/stores/payment.ts` 是整個前端的核心，負責管理付款狀態和 SSE 連接：
 
 ```typescript
 // SSE 連接建立
@@ -83,13 +82,13 @@ function startListeningForPaymentEvents() {
         paymentStatus.value = data.status as any;
         paymentMessage.value = data.message || '';
         
-        // 如果支付已完成，關閉連接
+        // 如果付款已完成，關閉連接
         if (data.status === 'SUCCESS' || data.status === 'FAILURE') {
           stopListeningForPaymentEvents();
         }
       }
     } catch (error) {
-      console.error('處理支付事件出錯:', error);
+      console.error('處理付款事件出錯:', error);
     }
   };
 }
@@ -97,21 +96,21 @@ function startListeningForPaymentEvents() {
 
 #### 付款組件
 
-`/src/components/PaymentService.vue` 負責用戶界面和支付流程交互：
+`/src/components/PaymentService.vue` 負責使用者介面和付款流程互動：
 
 ```typescript
-// 開始支付流程
+// 開始付款流程
 const startPayment = async () => {
   if (!isValidAmount.value) return;
   
-  // 初始化支付
+  // 初始化付款
   const paymentUrl = await paymentStore.initializePayment(amount.value);
   
   if (paymentUrl) {
-    // 開始監聽支付事件
+    // 開始監聽付款事件
     paymentStore.startListeningForPaymentEvents();
     
-    // 打開第三方支付頁面
+    // 開啟第三方付款頁面
     window.open(`http://localhost:8080${paymentUrl}`, '_blank', 'width=800,height=600');
   }
 };
@@ -119,25 +118,25 @@ const startPayment = async () => {
 
 ### 前端運行說明
 
-1. 安裝依賴：
+1. 安裝相依套件：
    ```bash
    cd server-sent-events-frontend
    npm install
    ```
 
-2. 啟動開發服務器：
+2. 啟動開發伺服器：
    ```bash
    npm run dev
    ```
 
-3. 構建生產版本：
+3. 建置生產版本：
    ```bash
    npm run build
    ```
 
 ## 後端實現 (Backend)
 
-### Tech
+### 技術棧
 
 - Spring Boot 3
 - Spring WebFlux
@@ -148,7 +147,7 @@ const startPayment = async () => {
 
 #### PaymentService
 
-`com.bill.payment.PaymentService` 是後端的核心類，負責管理支付事件和通知：
+`com.bill.sse.service.PaymentService` 是後端的核心類，負責管理付款事件和通知：
 
 ```java
 @Service
@@ -180,7 +179,7 @@ public class PaymentService {
 
 #### SSE 控制器
 
-`com.bill.payment.SseController` 提供 SSE 端點：
+`com.bill.sse.controller.SseController` 提供 SSE 端點：
 
 ```java
 @RestController
@@ -199,9 +198,9 @@ public class SseController {
 }
 ```
 
-#### 支付控制器
+#### 付款控制器
 
-`com.bill.payment.PaymentController` 處理支付初始化和回調：
+`com.bill.sse.controller.PaymentController` 處理付款初始化和回調：
 
 ```java
 @RestController
@@ -212,19 +211,19 @@ public class PaymentController {
     
     private final PaymentService paymentService;
     
-    // 初始化支付
+    // 初始化付款
     @PostMapping("/initialize")
     public ResponseEntity<Map<String, Object>> initializePayment(@RequestBody Map<String, Object> paymentRequest) {
-        // 創建訂單、返回支付 URL 等...
+        // 建立訂單、返回付款 URL 等...
     }
     
-    // 第三方支付回調接口
+    // 第三方付款回調介面
     @PostMapping("/callback")
     public ResponseEntity<String> paymentCallback(@RequestBody Map<String, String> callbackData) {
-        // 處理支付結果、發布事件通知...
+        // 處理付款結果、發布事件通知...
     }
     
-    // 模擬支付成功/失敗的測試端點...
+    // 模擬付款成功/失敗的測試端點...
 }
 ```
 
@@ -235,12 +234,12 @@ Server-Sent Events 是本系統的核心技術，其實現基於以下組件：
 1. **後端 SSE 發送**：
    - 使用 Reactor 的 `Sinks.Many` 創建事件流
    - 通過 `MediaType.TEXT_EVENT_STREAM_VALUE` 指定回應類型
-   - 當支付狀態改變時，通過 `paymentEventSink.tryEmitNext()` 發布事件
+   - 當付款狀態改變時，通過 `paymentEventSink.tryEmitNext()` 發布事件
 
 2. **前端 SSE 接收**：
    - 使用瀏覽器原生的 `EventSource` API 建立連接
    - 通過 `onmessage` 事件處理器接收推送的事件
-   - 根據事件內容更新界面狀態
+   - 根據事件內容更新介面狀態
 
 ### 後端運行說明
 
@@ -250,22 +249,22 @@ Server-Sent Events 是本系統的核心技術，其實現基於以下組件：
    ./gradlew bootRun
    ```
 
-2. 後端將在 8080 端口啟動，提供以下主要端點：
-   - `POST /api/payment/initialize`: 初始化支付
+2. 後端將在 8080 連接埠啟動，提供以下主要端點：
+   - `POST /api/payment/initialize`: 初始化付款
    - `GET /api/sse/payment-events`: SSE 事件流端點
-   - `POST /api/payment/callback`: 支付回調端點
-   - `/third-party-payment.html`: 模擬的第三方支付頁面
+   - `POST /api/payment/callback`: 付款回調端點
+   - `/third-party-payment.html`: 模擬的第三方付款頁面
 
 ## 系統優勢
 
 1. **即時通知**：使用 SSE 實現即時通知，無需輪詢
 2. **簡單可靠**：基於標準 HTTP 協議，無需額外的 WebSocket 配置
-3. **高效**：SSE 連接自動重連，保證消息可靠傳遞
-4. **單向通信**：適合從服務器到客戶端的數據推送場景
+3. **高效**：SSE 連接自動重連，保證訊息可靠傳遞
+4. **單向通訊**：適合從伺服器到客戶端的資料推送場景
 
 ## 注意事項
 
 1. 本示範系統僅用於演示目的，不適合直接用於生產環境
-2. 真實環境中應加入適當的安全措施，如簽名驗證、加密等
-3. 生產環境中應使用更可靠的訂單存儲方式，如數據庫
-4. 長時間空閒可能導致某些代理/防火牆關閉連接，實際應用中需考慮心跳機制
+2. 實際環境中應加入適當的安全措施，如簽名驗證、加密等
+3. 生產環境中應使用更可靠的訂單儲存方式，如資料庫
+4. 長時間閒置可能導致某些代理/防火牆關閉連接，實際應用中需考慮心跳機制

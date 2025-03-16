@@ -4,7 +4,7 @@
       <h3>訂單狀態</h3>
       <p><strong>訂單編號：</strong>{{ paymentStore.currentOrderId }}</p>
       <p>
-        <strong>支付狀態：</strong>
+        <strong>付款狀態：</strong>
         <span :class="statusClass">{{ statusText }}</span>
       </p>
       <p v-if="paymentStore.paymentMessage" class="message">
@@ -61,9 +61,9 @@ const statusText = computed(() => {
     case 'PENDING':
       return '處理中';
     case 'SUCCESS':
-      return '支付成功';
+      return '付款成功';
     case 'FAILURE':
-      return '支付失敗';
+      return '付款失敗';
     default:
       return '未知狀態';
   }
@@ -86,21 +86,21 @@ const statusClass = computed(() => {
 const startPayment = async () => {
   if (!isValidAmount.value) return;
   
-  // 初始化支付
+  // 初始化付款
   const paymentUrl = await paymentStore.initializePayment(amount.value);
   
   if (paymentUrl) {
-    // 開始監聽支付事件
+    // 開始監聽付款事件
     paymentStore.startListeningForPaymentEvents();
     
-    // 打開第三方支付頁面
+    // 開啟第三方付款頁面
     window.open(`http://localhost:8080${paymentUrl}`, '_blank', 'width=800,height=600');
   }
 };
 
 // 生命週期鉤子
 onMounted(() => {
-  // 如果有進行中的訂單，開始監聽支付事件
+  // 如果有進行中的訂單，開始監聽付款事件
   if (paymentStore.hasActiveOrder && paymentStore.paymentStatus === 'PENDING') {
     paymentStore.startListeningForPaymentEvents();
   }

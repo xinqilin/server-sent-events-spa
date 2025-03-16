@@ -1,0 +1,29 @@
+name: Add Copilot as PR Reviewer
+
+on:
+  pull_request:
+    types: [opened, reopened, ready_for_review]
+
+jobs:
+  add-copilot-reviewer:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Add Copilot as reviewer
+        uses: actions/github-script@v6
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const { owner, repo } = context.repo;
+            const prNumber = context.payload.pull_request.number;
+            
+            try {
+              await github.rest.pulls.requestReviewers({
+                owner,
+                repo,
+                pull_number: prNumber,
+                reviewers: ['github-copilot']
+              });
+              console.log('✅ Successfully added GitHub Copilot as a reviewer');
+            } catch (error) {
+              console.log(`❌ Failed to add GitHub Copilot as a reviewer: ${error.message}`);
+            }

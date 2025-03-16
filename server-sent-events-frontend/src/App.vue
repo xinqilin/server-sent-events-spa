@@ -1,7 +1,7 @@
 <template>
   <header>
     <div class="wrapper">
-      <h1>第三方支付 SSE 示範</h1>
+      <h1>第三方付款 SSE 示範</h1>
       <nav>
         <RouterLink to="/">首頁</RouterLink>
         <RouterLink to="/about">關於</RouterLink>

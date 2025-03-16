@@ -1,11 +1,14 @@
-package com.bill.payment;
+package com.bill.sse.controller;
 
+import com.bill.sse.service.PaymentService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.math.BigDecimal;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
@@ -19,34 +22,51 @@ public class PaymentController {
     
     private final PaymentService paymentService;
     
-    // 存儲訂單狀態（實際系統應該用資料庫）
+    // 儲存訂單狀態（實際系統應該用資料庫）
     private final Map<String, String> orderStatus = new ConcurrentHashMap<>();
     
-    // 初始化支付
+    // 初始化付款
     @PostMapping("/initialize")
     public ResponseEntity<Map<String, Object>> initializePayment(@RequestBody Map<String, Object> paymentRequest) {
-        // 模擬創建訂單
+        // 模擬建立訂單
         String orderId = UUID.randomUUID().toString();
-        Double amount = (Double) paymentRequest.getOrDefault("amount", 100.0);
+        
+        // 安全地處理金額，支援多種數字類型轉換為 BigDecimal
+        BigDecimal amount;
+        Object amountObj = paymentRequest.getOrDefault("amount", new BigDecimal("100.00"));
+        
+        if (amountObj instanceof Number) {
+            amount = new BigDecimal(amountObj.toString());
+        } else if (amountObj instanceof String) {
+            try {
+                amount = new BigDecimal((String) amountObj);
+            } catch (NumberFormatException e) {
+                amount = new BigDecimal("100.00");
+            }
+        } else {
+            amount = new BigDecimal("100.00");
+        }
         
         // 儲存訂單狀態
         orderStatus.put(orderId, "PENDING");
         
-        log.info("初始化支付訂單: {}, 金額: {}", orderId, amount);
+        log.info("初始化付款訂單: {}, 金額: {}", orderId, amount);
         
-        // 生成付款頁面網址（實際上應為第三方支付網址）
+        // 生成付款頁面網址（實際上應為第三方付款網址）
         String paymentUrl = "/third-party-payment.html?orderId=" + orderId + "&amount=" + amount;
         
+        // 使用 HashMap 替代 Map.of 以支援更多項目
+        Map<String, Object> responseData = new HashMap<>();
+        responseData.put("orderId", orderId);
+        responseData.put("amount", amount);
+        responseData.put("status", "PENDING");
+        responseData.put("paymentUrl", paymentUrl);
+        
         // 回傳訂單資訊和付款頁面網址
-        return ResponseEntity.ok(Map.of(
-                "orderId", orderId,
-                "amount", amount,
-                "status", "PENDING",
-                "paymentUrl", paymentUrl
-        ));
+        return ResponseEntity.ok(responseData);
     }
     
-    // 第三方支付回調接口（模擬）
+    // 第三方付款回調介面（模擬）
     @PostMapping("/callback")
     public ResponseEntity<String> paymentCallback(@RequestBody Map<String, String> callbackData) {
         String orderId = callbackData.get("orderId");
@@ -83,7 +103,7 @@ public class PaymentController {
         return ResponseEntity.ok(Map.of("status", orderStatus.get(orderId)));
     }
     
-    // 模擬支付成功（測試用）
+    // 模擬付款成功（測試用）
     @PostMapping("/{orderId}/simulate-success")
     public ResponseEntity<String> simulateSuccess(@PathVariable String orderId) {
         if (!orderStatus.containsKey(orderId)) {
@@ -97,7 +117,7 @@ public class PaymentController {
         return ResponseEntity.ok("已模擬付款成功");
     }
     
-    // 模擬支付失敗（測試用）
+    // 模擬付款失敗（測試用）
     @PostMapping("/{orderId}/simulate-failure")
     public ResponseEntity<String> simulateFailure(
             @PathVariable String orderId,

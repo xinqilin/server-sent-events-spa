@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>第三方支付頁面</title>
+    <title>第三方付款頁面</title>
     <style>
         body {
             font-family: 'Arial', sans-serif;
@@ -63,11 +63,11 @@
 </head>
 <body>
     <div class="container">
-        <h1>第三方支付</h1>
+        <h1>第三方付款</h1>
         
         <div class="payment-info">
             <p><strong>訂單編號:</strong> <span id="orderId">正在載入...</span></p>
-            <p><strong>支付金額:</strong> <span id="amount">正在載入...</span> 元</p>
+            <p><strong>付款金額:</strong> <span id="amount">正在載入...</span> 元</p>
         </div>
         
         <div class="btn-container">
@@ -108,7 +108,7 @@
                 .then(response => response.text())
                 .then(data => {
                     alert('付款已成功處理！');
-                    window.close(); // 關閉窗口
+                    window.close(); // 關閉視窗
                 })
                 .catch(error => {
                     console.error('Error:', error);
@@ -138,7 +138,7 @@
                 .then(response => response.text())
                 .then(data => {
                     alert('您已取消付款');
-                    window.close(); // 關閉窗口
+                    window.close(); // 關閉視窗
                 })
                 .catch(error => {
                     console.error('Error:', error);

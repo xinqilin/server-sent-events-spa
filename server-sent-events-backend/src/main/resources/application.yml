@@ -1,0 +1,11 @@
+server:
+  port: 8080
+
+spring:
+  webflux:
+    static-path-pattern: /**  # 處理所有靜態資源請求路徑
+  web:
+    resources:
+      static-locations: classpath:/static/  # 靜態資源放在 classpath:/static/ 目錄下
+  codec:
+    max-in-memory-size: 10MB  # 增加請求大小限制

@@ -17,7 +17,7 @@ export const usePaymentStore = defineStore('payment', () => {
   const hasActiveOrder = computed(() => !!currentOrderId.value);
   
   // 方法
-  // 初始化支付
+  // 初始化付款
   async function initializePayment(amount: number): Promise<string | null> {
     try {
       isProcessing.value = true;
@@ -31,7 +31,7 @@ export const usePaymentStore = defineStore('payment', () => {
       });
       
       if (!response.ok) {
-        throw new Error('初始化支付失敗');
+        throw new Error('初始化付款失敗');
       }
       
       const data = await response.json();
@@ -40,14 +40,14 @@ export const usePaymentStore = defineStore('payment', () => {
       
       return data.paymentUrl;
     } catch (error) {
-      console.error('初始化支付出錯:', error);
+      console.error('初始化付款出錯:', error);
       return null;
     } finally {
       isProcessing.value = false;
     }
   }
   
-  // 開始監聽支付事件
+  // 開始監聽付款事件
   function startListeningForPaymentEvents() {
     if (eventSource) {
       // 如果已經有連接，先關閉
@@ -67,15 +67,15 @@ export const usePaymentStore = defineStore('payment', () => {
           paymentStatus.value = data.status as any;
           paymentMessage.value = data.message || '';
           
-          console.log(`收到支付狀態更新: ${data.status}`);
+          console.log(`收到付款狀態更新: ${data.status}`);
           
-          // 如果支付已完成（成功或失敗），關閉連接
+          // 如果付款已完成（成功或失敗），關閉連接
           if (data.status === 'SUCCESS' || data.status === 'FAILURE') {
             stopListeningForPaymentEvents();
           }
         }
       } catch (error) {
-        console.error('處理支付事件出錯:', error);
+        console.error('處理付款事件出錯:', error);
       }
     };
     
@@ -86,7 +86,7 @@ export const usePaymentStore = defineStore('payment', () => {
     };
   }
   
-  // 停止監聽支付事件
+  // 停止監聽付款事件
   function stopListeningForPaymentEvents() {
     if (eventSource) {
       eventSource.close();
@@ -94,7 +94,7 @@ export const usePaymentStore = defineStore('payment', () => {
     }
   }
   
-  // 重置支付狀態
+  // 重置付款狀態
   function resetPayment() {
     stopListeningForPaymentEvents();
     currentOrderId.value = null;
