@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>第三方支付頁面</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background-color: #fff;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .payment-info {
+            margin-bottom: 30px;
+            padding: 15px;
+            background-color: #f9f9f9;
+            border-radius: 5px;
+            border-left: 4px solid #4CAF50;
+        }
+        .btn {
+            display: inline-block;
+            background-color: #4CAF50;
+            color: white;
+            padding: 12px 20px;
+            margin: 8px 4px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+            text-align: center;
+            width: calc(50% - 12px);
+        }
+        .btn:hover {
+            background-color: #45a049;
+        }
+        .btn-cancel {
+            background-color: #f44336;
+        }
+        .btn-cancel:hover {
+            background-color: #da190b;
+        }
+        .btn-container {
+            display: flex;
+            justify-content: space-between;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>第三方支付</h1>
+        
+        <div class="payment-info">
+            <p><strong>訂單編號:</strong> <span id="orderId">正在載入...</span></p>
+            <p><strong>支付金額:</strong> <span id="amount">正在載入...</span> 元</p>
+        </div>
+        
+        <div class="btn-container">
+            <button id="btn-success" class="btn">確認付款</button>
+            <button id="btn-cancel" class="btn btn-cancel">取消付款</button>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // 解析URL參數
+            const urlParams = new URLSearchParams(window.location.search);
+            const orderId = urlParams.get('orderId');
+            const amount = urlParams.get('amount');
+            
+            // 更新頁面顯示
+            document.getElementById('orderId').textContent = orderId || '無效訂單';
+            document.getElementById('amount').textContent = amount || '0';
+            
+            // 確認付款按鈕
+            document.getElementById('btn-success').addEventListener('click', function() {
+                if (!orderId) {
+                    alert('無效的訂單ID');
+                    return;
+                }
+                
+                // 發送付款成功的回調請求
+                fetch('/api/payment/callback', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        orderId: orderId,
+                        status: 'SUCCESS'
+                    })
+                })
+                .then(response => response.text())
+                .then(data => {
+                    alert('付款已成功處理！');
+                    window.close(); // 關閉窗口
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('處理付款時發生錯誤，請稍後再試');
+                });
+            });
+            
+            // 取消付款按鈕
+            document.getElementById('btn-cancel').addEventListener('click', function() {
+                if (!orderId) {
+                    alert('無效的訂單ID');
+                    return;
+                }
+                
+                // 發送付款失敗的回調請求
+                fetch('/api/payment/callback', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        orderId: orderId,
+                        status: 'FAILURE',
+                        reason: '使用者取消付款'
+                    })
+                })
+                .then(response => response.text())
+                .then(data => {
+                    alert('您已取消付款');
+                    window.close(); // 關閉窗口
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('處理取消付款時發生錯誤');
+                });
+            });
+        });
+    </script>
+</body>
+</html>
