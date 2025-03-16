@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.SignalType;
+import java.time.Duration;
 
 import java.util.Map;
 import java.util.UUID;
@@ -42,8 +43,18 @@ public class SseController {
         log.info("SSE 連接已建立, 連接ID: {}, 客戶端: {}, User-Agent: {}, current 連接數: {}",
                 connectionId, clientIp, userAgent, currentConnections);
 
+        // 創建心跳事件流，每30秒發送一次心跳以保持連接
+        Flux<PaymentEvent> heartbeat = Flux.interval(Duration.ofSeconds(30))
+            .map(tick -> PaymentEvent.createHeartbeatEvent());
+
+        // 合併心跳和支付事件流
+        Flux<PaymentEvent> combinedFlux = Flux.merge(
+            paymentService.getPaymentEvents(),
+            heartbeat
+        );
+        
         // 使用 doOnCancel 和 doFinally 來追蹤連接關閉情況
-        return paymentService.getPaymentEvents()
+        return combinedFlux
                 // 記錄每個事件的發送
                 .doOnNext(event -> {
                     log.debug("SSE 事件發送, 連接ID: {}, 事件類型: {}, 訂單ID: {}, 狀態: {}",

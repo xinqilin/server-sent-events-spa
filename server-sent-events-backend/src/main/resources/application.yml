@@ -1,5 +1,9 @@
 server:
   port: 8080
+  # 加長連接超時時間
+  shutdown: graceful
+  netty:
+    connection-timeout: 600s
 
 spring:
   webflux:

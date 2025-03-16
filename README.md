@@ -4,8 +4,8 @@
 
 ## 系統架構
 
-- **Frontend**: Vue 3 + TypeScript + Pinia 實現的單頁面應用
-- **Backend**: Spring Boot 3 + WebFlux 實現的響應式後端服務
+- **Frontend**: Vue 3 + TypeScript + Pinia
+- **Backend**: Spring Boot 3 + WebFlux
 
 ## 系統流程
 
@@ -45,6 +45,7 @@ sequenceDiagram
 8. 後端更新訂單狀態並通過 SSE 連接將結果推送給頁面 A
 9. 頁面 A 收到結果後更新介面顯示付款結果
 
+### multicast
 
 ```
      /-- 訂閱者1 (瀏覽器頁面A)

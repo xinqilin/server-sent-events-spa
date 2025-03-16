@@ -31,4 +31,14 @@ public record PaymentEvent(
                 System.currentTimeMillis()
         );
     }
+    
+    public static PaymentEvent createHeartbeatEvent() {
+        return new PaymentEvent(
+                "HEARTBEAT",
+                null,
+                null,
+                "heartbeat",
+                System.currentTimeMillis()
+        );
+    }
 }
