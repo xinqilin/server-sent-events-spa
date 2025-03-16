@@ -1,23 +1,14 @@
 <template>
   <main class="home">
-    <h1>付款示範</h1>
-    <p class="description">
-      這是一個使用 Server-Sent Events (SSE) 實現的第三方付款流程模擬示範。點擊「付款」按鈕後，
-      系統會開啟一個新的瀏覽器視窗模擬第三方付款頁面，當您在該頁面完成或取消付款後，
-      原頁面會通過 SSE 接收付款結果通知並更新狀態。
-    </p>
-    
     <PaymentService />
-    
+
     <div class="how-it-works">
-      <h2>工作原理</h2>
       <ol>
-        <li>當您點擊「付款」按鈕時，系統會向後端發送初始化付款的請求</li>
-        <li>後端建立訂單並回傳付款頁面 URL</li>
-        <li>前端開啟新視窗顯示第三方付款頁面</li>
-        <li>同時，前端通過 SSE 建立與後端的連接，等待付款結果通知</li>
-        <li>當您在付款頁面完成或取消付款時，付款頁面會向後端發送回調</li>
-        <li>後端接收回調後，通過 SSE 向前端發送付款結果</li>
+        <li>點擊「付款」按鈕後 => create payment</li>
+        <li>redirect to third party</li>
+        <li>前端通過 SSE 建立與後端的連接，等待付款結果通知</li>
+        <li>付款完成後 callback 更新資料庫</li>
+        <li>通過 SSE 向前端發送付款結果</li>
         <li>前端接收通知並更新頁面狀態</li>
       </ol>
     </div>
@@ -25,7 +16,7 @@
 </template>
 
 <script setup lang="ts">
-import PaymentService from '@/components/PaymentService.vue';
+import PaymentService from '@/components/PaymentService.vue'
 </script>
 
 <style scoped>

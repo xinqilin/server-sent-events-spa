@@ -9,3 +9,16 @@ spring:
       static-locations: classpath:/static/  # 靜態資源放在 classpath:/static/ 目錄下
   codec:
     max-in-memory-size: 10MB  # 增加請求大小限制
+  output:
+    ansi:
+      enabled: ALWAYS  # 啟用 ANSI 顏色輸出
+
+# 日誌配置
+logging:
+  level:
+    root: INFO
+    com.bill.sse: DEBUG
+    org.springframework.web.reactive: INFO
+    reactor.netty: INFO
+  pattern:
+    console: "%clr(%d{yyyy-MM-dd HH:mm:ss.SSS}){faint} %clr([%thread]){magenta} %clr(%-5level){blue} %clr(%logger{36}){cyan} - %msg%n"

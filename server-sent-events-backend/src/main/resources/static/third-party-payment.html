@@ -59,6 +59,28 @@
             display: flex;
             justify-content: space-between;
         }
+        .result-message {
+            display: none;
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 5px;
+            text-align: center;
+            font-size: 16px;
+        }
+        .success-message {
+            background-color: #e8f5e9;
+            border-left: 4px solid #4CAF50;
+            color: #2e7d32;
+        }
+        .failure-message {
+            background-color: #ffebee;
+            border-left: 4px solid #f44336;
+            color: #c62828;
+        }
+        .btn-disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
     </style>
 </head>
 <body>
@@ -70,9 +92,20 @@
             <p><strong>付款金額:</strong> <span id="amount">正在載入...</span> 元</p>
         </div>
         
-        <div class="btn-container">
+        <div class="btn-container" id="action-buttons">
             <button id="btn-success" class="btn">確認付款</button>
             <button id="btn-cancel" class="btn btn-cancel">取消付款</button>
+        </div>
+
+        <!-- 付款結果訊息 -->
+        <div id="success-message" class="result-message success-message">
+            <h3>付款已成功處理！</h3>
+            <p>請回到原始頁面查看訂單狀態。原頁面已自動更新付款結果。</p>
+        </div>
+        
+        <div id="failure-message" class="result-message failure-message">
+            <h3>付款已取消</h3>
+            <p>您已取消此次付款。請回到原始頁面確認訂單狀態。</p>
         </div>
     </div>
 
@@ -83,16 +116,26 @@
             const orderId = urlParams.get('orderId');
             const amount = urlParams.get('amount');
             
+            // 獲取DOM元素
+            const successBtn = document.getElementById('btn-success');
+            const cancelBtn = document.getElementById('btn-cancel');
+            const actionButtons = document.getElementById('action-buttons');
+            const successMessage = document.getElementById('success-message');
+            const failureMessage = document.getElementById('failure-message');
+            
             // 更新頁面顯示
             document.getElementById('orderId').textContent = orderId || '無效訂單';
             document.getElementById('amount').textContent = amount || '0';
             
             // 確認付款按鈕
-            document.getElementById('btn-success').addEventListener('click', function() {
+            successBtn.addEventListener('click', function() {
                 if (!orderId) {
                     alert('無效的訂單ID');
                     return;
                 }
+                
+                // 禁用按鈕防止重複提交
+                disableButtons();
                 
                 // 發送付款成功的回調請求
                 fetch('/api/payment/callback', {
@@ -107,21 +150,26 @@
                 })
                 .then(response => response.text())
                 .then(data => {
-                    alert('付款已成功處理！');
-                    window.close(); // 關閉視窗
+                    // 顯示成功訊息而非關閉視窗
+                    successMessage.style.display = 'block';
+                    actionButtons.style.display = 'none';
                 })
                 .catch(error => {
                     console.error('Error:', error);
                     alert('處理付款時發生錯誤，請稍後再試');
+                    enableButtons();
                 });
             });
             
             // 取消付款按鈕
-            document.getElementById('btn-cancel').addEventListener('click', function() {
+            cancelBtn.addEventListener('click', function() {
                 if (!orderId) {
                     alert('無效的訂單ID');
                     return;
                 }
+                
+                // 禁用按鈕防止重複提交
+                disableButtons();
                 
                 // 發送付款失敗的回調請求
                 fetch('/api/payment/callback', {
@@ -137,14 +185,32 @@
                 })
                 .then(response => response.text())
                 .then(data => {
-                    alert('您已取消付款');
-                    window.close(); // 關閉視窗
+                    // 顯示取消訊息而非關閉視窗
+                    failureMessage.style.display = 'block';
+                    actionButtons.style.display = 'none';
                 })
                 .catch(error => {
                     console.error('Error:', error);
                     alert('處理取消付款時發生錯誤');
+                    enableButtons();
                 });
             });
+            
+            // 禁用按鈕函數
+            function disableButtons() {
+                successBtn.disabled = true;
+                cancelBtn.disabled = true;
+                successBtn.classList.add('btn-disabled');
+                cancelBtn.classList.add('btn-disabled');
+            }
+            
+            // 啟用按鈕函數
+            function enableButtons() {
+                successBtn.disabled = false;
+                cancelBtn.disabled = false;
+                successBtn.classList.remove('btn-disabled');
+                cancelBtn.classList.remove('btn-disabled');
+            }
         });
     </script>
 </body>

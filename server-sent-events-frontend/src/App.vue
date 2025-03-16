@@ -1,14 +1,12 @@
 <template>
   <header>
     <div class="wrapper">
-      <h1>第三方付款 SSE 示範</h1>
+      <h1>第三方金流 SSE POC</h1>
       <nav>
         <RouterLink to="/">首頁</RouterLink>
-        <RouterLink to="/about">關於</RouterLink>
       </nav>
     </div>
   </header>
-
   <RouterView />
 </template>
 
@@ -58,8 +56,8 @@ nav a:hover {
 
 nav a.router-link-exact-active {
   color: white;
-  background-color: #4CAF50;
-  border-color: #4CAF50;
+  background-color: #4caf50;
+  border-color: #4caf50;
 }
 
 h1 {

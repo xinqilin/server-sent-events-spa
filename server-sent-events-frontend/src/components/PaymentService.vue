@@ -10,32 +10,32 @@
       <p v-if="paymentStore.paymentMessage" class="message">
         {{ paymentStore.paymentMessage }}
       </p>
-      
+
       <div v-if="paymentStore.isPaymentSuccess || paymentStore.isPaymentFailure" class="actions">
         <button @click="paymentStore.resetPayment" class="btn btn-primary">
           開始新的付款
         </button>
       </div>
     </div>
-    
+
     <div v-else class="payment-form">
       <h3>付款表單</h3>
       <div class="form-group">
         <label for="amount">金額</label>
-        <input 
-          type="number" 
-          id="amount" 
-          v-model="amount" 
-          :disabled="paymentStore.isProcessing" 
+        <input
+          type="number"
+          id="amount"
+          v-model="amount"
+          :disabled="paymentStore.isProcessing"
           min="1"
           step="1"
           class="form-control"
         />
       </div>
-      
-      <button 
-        @click="startPayment" 
-        class="btn btn-primary" 
+
+      <button
+        @click="startPayment"
+        class="btn btn-primary"
         :disabled="!isValidAmount || paymentStore.isProcessing"
       >
         {{ paymentStore.isProcessing ? '處理中...' : '付款' }}
@@ -85,16 +85,16 @@ const statusClass = computed(() => {
 // 方法
 const startPayment = async () => {
   if (!isValidAmount.value) return;
-  
+
   // 初始化付款
   const paymentUrl = await paymentStore.initializePayment(amount.value);
-  
+
   if (paymentUrl) {
     // 開始監聽付款事件
     paymentStore.startListeningForPaymentEvents();
-    
+
     // 開啟第三方付款頁面
-    window.open(`http://localhost:8080${paymentUrl}`, '_blank', 'width=800,height=600');
+    window.open(`http://localhost:8080${paymentUrl}`, '_blank');
   }
 };
 
