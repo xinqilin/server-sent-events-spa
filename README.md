@@ -1,17 +1,15 @@
-# Server-Sent Events 第三方付款示範系統
+# Server-Sent Events 第三方付款 POC
 
 這是一個使用 Server-Sent Events (SSE) 實現的模擬第三方付款系統，展示了如何在不同頁面間通過 SSE 進行即時通訊。主要用於展示當使用者從原始頁面跳轉到第三方付款頁面後，如何將付款結果即時通知回原頁面。
 
 ## 系統架構
-
-本系統由以下兩個主要部分組成：
 
 - **Frontend**: Vue 3 + TypeScript + Pinia 實現的單頁面應用
 - **Backend**: Spring Boot 3 + WebFlux 實現的響應式後端服務
 
 ## 系統流程
 
-整個付款流程如下圖所示：
+付款流程：
 
 ```mermaid
 sequenceDiagram
@@ -35,7 +33,7 @@ sequenceDiagram
     F->>A: 更新頁面顯示付款結果
 ```
 
-### 詳細流程說明
+### 詳細流程
 
 1. 使用者在頁面 A 點擊「付款」按鈕
 2. 前端向後端發送初始化付款請求
@@ -49,7 +47,7 @@ sequenceDiagram
 
 ## 前端實現 (Frontend)
 
-### 技術棧
+### 技術
 
 - Vue 3
 - TypeScript
