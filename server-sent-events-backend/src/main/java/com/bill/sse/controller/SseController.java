@@ -5,6 +5,7 @@ import com.bill.sse.vo.PaymentEvent;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.MediaType;
+import org.springframework.http.codec.ServerSentEvent;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -29,7 +30,7 @@ public class SseController {
     private static final AtomicInteger activeConnections = new AtomicInteger(0);
 
     @GetMapping(value = "/payment-events", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
-    public Flux<PaymentEvent> streamEvents(ServerWebExchange exchange) {
+    public Flux<ServerSentEvent<PaymentEvent>> streamEvents(ServerWebExchange exchange) {
         // 生成唯一的連接 ID 用於日誌追蹤
         String connectionId = UUID.randomUUID().toString().substring(0, 8);
         String clientIp = exchange.getRequest().getRemoteAddress() != null
@@ -44,12 +45,26 @@ public class SseController {
                 connectionId, clientIp, userAgent, currentConnections);
 
         // 創建心跳事件流，每30秒發送一次心跳以保持連接
-        Flux<PaymentEvent> heartbeat = Flux.interval(Duration.ofSeconds(30))
-            .map(tick -> PaymentEvent.createHeartbeatEvent());
+        Flux<ServerSentEvent<PaymentEvent>> heartbeat = Flux.interval(Duration.ofSeconds(30))
+            .map(tick -> ServerSentEvent.<PaymentEvent>builder()
+                .id(String.valueOf(tick))
+                .event("heartbeat")
+                .data(PaymentEvent.createHeartbeatEvent())
+                .build()
+            );
+
+        // 轉換事件流為 ServerSentEvent 格式
+        Flux<ServerSentEvent<PaymentEvent>> paymentEvents = paymentService.getPaymentEvents()
+            .map(event -> ServerSentEvent.<PaymentEvent>builder()
+                .id(event.orderId() != null ? event.orderId() : UUID.randomUUID().toString())
+                .event(event.eventType())
+                .data(event)
+                .build()
+            );
 
         // 合併心跳和支付事件流
-        Flux<PaymentEvent> combinedFlux = Flux.merge(
-            paymentService.getPaymentEvents(),
+        Flux<ServerSentEvent<PaymentEvent>> combinedFlux = Flux.merge(
+            paymentEvents,
             heartbeat
         );
         
@@ -58,7 +73,10 @@ public class SseController {
                 // 記錄每個事件的發送
                 .doOnNext(event -> {
                     log.debug("SSE 事件發送, 連接ID: {}, 事件類型: {}, 訂單ID: {}, 狀態: {}",
-                            connectionId, event.eventType(), event.orderId(), event.status());
+                            connectionId, 
+                            event.event(), 
+                            event.data() != null ? event.data().orderId() : "null", 
+                            event.data() != null ? event.data().status() : "null");
                 })
                 // 記錄連接取消
                 .doOnCancel(() -> {

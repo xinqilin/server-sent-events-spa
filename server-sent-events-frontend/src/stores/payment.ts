@@ -71,9 +71,11 @@ export const usePaymentStore = defineStore('payment', () => {
       reconnectAttempts = 0; // 重置重連計數
     };
     
-    // 添加事件監聽器
+    // 添加通用事件監聽器
     eventSource.onmessage = (event) => {
       try {
+        console.log('原始事件數據:', event.data);
+        
         const data = JSON.parse(event.data);
         
         console.log(`收到付款事件數據:`, data);
@@ -103,6 +105,39 @@ export const usePaymentStore = defineStore('payment', () => {
         console.error('處理付款事件出錯:', error);
       }
     };
+    
+    // 專門的付款狀態事件監聽器
+    eventSource.addEventListener('PAYMENT_STATUS', (event: MessageEvent) => {
+      try {
+        console.log('收到 PAYMENT_STATUS 事件:', event.data);
+        
+        const data = JSON.parse(event.data);
+        
+        if (data.orderId === currentOrderId.value) {
+          paymentStatus.value = data.status as any;
+          paymentMessage.value = data.message || '';
+          
+          console.log(`收到付款狀態更新: ${data.status}`);
+          
+          // 如果付款已完成（成功或失敗），設置延遲關閉連接
+          if (data.status === 'SUCCESS' || data.status === 'FAILURE') {
+            // 延遲1秒後關閉連接，確保所有事件都被接收
+            setTimeout(() => {
+              stopListeningForPaymentEvents();
+            }, 1000);
+          }
+        }
+      } catch (error) {
+        console.error('處理付款事件出錯:', error);
+      }
+    });
+    
+    // 心跳事件監聽器
+    eventSource.addEventListener('heartbeat', (event: MessageEvent) => {
+      console.log('收到心跳事件:', event.data);
+      // 重置重連嘗試計數
+      reconnectAttempts = 0;
+    });
     
     // 改進錯誤處理
     eventSource.onerror = (error) => {
