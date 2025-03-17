@@ -27,6 +27,9 @@ export const usePaymentStore = defineStore('payment', () => {
     try {
       isProcessing.value = true;
       
+      // 確保之前的連接已關閉
+      stopListeningForPaymentEvents();
+      
       const response = await fetch('http://localhost:8080/api/payment/initialize', {
         method: 'POST',
         headers: {
@@ -54,6 +57,11 @@ export const usePaymentStore = defineStore('payment', () => {
   
   // 開始監聽付款事件
   function startListeningForPaymentEvents() {
+    console.log('%c 啟動 SSE 連接', 'background: #009688; color: white; padding: 2px 5px; border-radius: 2px;', {
+      currentOrderId: currentOrderId.value,
+      paymentStatus: paymentStatus.value
+    });
+    
     if (eventSource) {
       // 如果已經有連接，先關閉
       eventSource.close();
@@ -67,22 +75,22 @@ export const usePaymentStore = defineStore('payment', () => {
     
     // 連接建立時的處理
     eventSource.onopen = (event) => {
-      console.log('SSE 連接已建立');
+      console.log('%c SSE 連接已建立', 'background: #4CAF50; color: white; padding: 2px 5px; border-radius: 2px;');
       reconnectAttempts = 0; // 重置重連計數
     };
     
     // 添加通用事件監聽器
     eventSource.onmessage = (event) => {
       try {
-        console.log('原始事件數據:', event.data);
+        console.log('%c 原始事件數據', 'background: #2196F3; color: white; padding: 2px 5px; border-radius: 2px;', event.data);
         
         const data = JSON.parse(event.data);
         
-        console.log(`收到付款事件數據:`, data);
+        console.log('%c 收到付款事件數據', 'background: #2196F3; color: white; padding: 2px 5px; border-radius: 2px;', data);
         
         // 處理心跳事件
         if (data.eventType === 'HEARTBEAT') {
-          console.log('收到心跳事件');
+          console.log('%c 收到心跳事件', 'background: #9C27B0; color: white; padding: 2px 5px; border-radius: 2px;', data);
           return;
         }
         
@@ -91,7 +99,8 @@ export const usePaymentStore = defineStore('payment', () => {
           paymentStatus.value = data.status as any;
           paymentMessage.value = data.message || '';
           
-          console.log(`收到付款狀態更新: ${data.status}`);
+          console.log('%c 收到付款狀態更新', 'background: #FF9800; color: white; padding: 2px 5px; border-radius: 2px;', `狀態: ${data.status}, 訂單: ${data.orderId}`);
+          console.log('付款訊息:', data.message);
           
           // 如果付款已完成（成功或失敗），設置延遲關閉連接
           if (data.status === 'SUCCESS' || data.status === 'FAILURE') {
@@ -109,7 +118,7 @@ export const usePaymentStore = defineStore('payment', () => {
     // 專門的付款狀態事件監聽器
     eventSource.addEventListener('PAYMENT_STATUS', (event: MessageEvent) => {
       try {
-        console.log('收到 PAYMENT_STATUS 事件:', event.data);
+        console.log('%c 收到 PAYMENT_STATUS 事件', 'background: #F44336; color: white; padding: 2px 5px; border-radius: 2px;', event.data);
         
         const data = JSON.parse(event.data);
         
@@ -117,7 +126,8 @@ export const usePaymentStore = defineStore('payment', () => {
           paymentStatus.value = data.status as any;
           paymentMessage.value = data.message || '';
           
-          console.log(`收到付款狀態更新: ${data.status}`);
+          console.log('%c 付款狀態更新 (事件監聽器)', 'background: #E91E63; color: white; padding: 2px 5px; border-radius: 2px;', `狀態: ${data.status}, 訂單: ${data.orderId}`);
+          console.log('付款訊息 (事件監聽器):', data.message);
           
           // 如果付款已完成（成功或失敗），設置延遲關閉連接
           if (data.status === 'SUCCESS' || data.status === 'FAILURE') {
@@ -134,38 +144,44 @@ export const usePaymentStore = defineStore('payment', () => {
     
     // 心跳事件監聽器
     eventSource.addEventListener('heartbeat', (event: MessageEvent) => {
-      console.log('收到心跳事件:', event.data);
-      // 重置重連嘗試計數
+      console.log('%c 收到心跳事件 (心跳監聽器)', 'background: #673AB7; color: white; padding: 2px 5px; border-radius: 2px;', event.data);
+      // 重置重連計數並打印日誌
       reconnectAttempts = 0;
+      console.log('%c 心跳重置重連計數', 'background: #673AB7; color: white; padding: 2px 5px; border-radius: 2px;', { reconnectAttempts });
     });
     
     // 改進錯誤處理
     eventSource.onerror = (error) => {
-      console.error('SSE 連接錯誤:', error);
+      console.error('%c SSE 連接錯誤', 'background: #F44336; color: white; padding: 2px 5px; border-radius: 2px;', error);
       
       // 檢查連接狀態
       if (eventSource && eventSource.readyState === EventSource.CLOSED) {
-        console.warn('SSE 連接已關閉');
+        console.warn('%c SSE 連接已關閉', 'background: #FF9800; color: white; padding: 2px 5px; border-radius: 2px;');
         
         // 檢查是否應該重新連接
         if (currentOrderId.value && paymentStatus.value === 'PENDING' && reconnectAttempts < maxReconnectAttempts) {
           reconnectAttempts++;
           
-          console.log(`嘗試重新建立 SSE 連接 (${reconnectAttempts}/${maxReconnectAttempts})`);
+          console.log('%c 嘗試重新建立 SSE 連接', 'background: #3F51B5; color: white; padding: 2px 5px; border-radius: 2px;', `重連次數: ${reconnectAttempts}/${maxReconnectAttempts}`);
           
           // 延遲一段時間後重新連接
           setTimeout(() => {
             if (currentOrderId.value && paymentStatus.value === 'PENDING') {
-              console.log('重新連接 SSE');
+              console.log('%c 重新連接 SSE', 'background: #3F51B5; color: white; padding: 2px 5px; border-radius: 2px;', {
+                orderId: currentOrderId.value,
+                status: paymentStatus.value
+              });
               startListeningForPaymentEvents();
             }
           }, reconnectDelay);
         } else if (reconnectAttempts >= maxReconnectAttempts) {
-          console.warn(`已達到最大重連次數 (${maxReconnectAttempts})，停止重連`);
+          console.warn('%c 已達到最大重連次數', 'background: #FF5722; color: white; padding: 2px 5px; border-radius: 2px;', `${maxReconnectAttempts} 次`);
           // 可以在這裡加入一些用戶通知或其他處理
         } else {
-          // 如果不是等待付款狀態，或沒有訂單，則不需要重連
-          console.log('不需要重連 SSE');
+          console.log('%c 不需要重連 SSE', 'background: #795548; color: white; padding: 2px 5px; border-radius: 2px;', {
+            orderId: currentOrderId.value,
+            status: paymentStatus.value
+          });
         }
       }
     };
@@ -174,7 +190,7 @@ export const usePaymentStore = defineStore('payment', () => {
   // 停止監聽付款事件
   function stopListeningForPaymentEvents() {
     if (eventSource) {
-      console.log('關閉 SSE 連接');
+      console.log('%c 關閉 SSE 連接', 'background: #607D8B; color: white; padding: 2px 5px; border-radius: 2px;');
       eventSource.close();
       eventSource = null;
     }

@@ -16,8 +16,8 @@ import java.util.UUID;
 /**
  * 請求日誌記錄過濾器，用於記錄所有HTTP請求的詳細資訊
  */
-@Component
-@Order(1)
+//@Component
+//@Order(1)
 @Slf4j
 public class RequestLoggingFilter implements WebFilter {
 
@@ -39,8 +39,7 @@ public class RequestLoggingFilter implements WebFilter {
         Instant startTime = Instant.now();
 
         // 記錄請求開始
-        log.info("[{}] 請求開始 | {} {} | 客戶端: {} | User-Agent: {}",
-                requestId, method, path, clientIp, userAgent);
+        log.info("[{}] 請求開始 | {} {} | 客戶端: {} | User-Agent: {}", requestId, method, path, clientIp, userAgent);
 
         // 使用exchange的attributes保存requestId，以便在其他地方使用
         exchange.getAttributes().put("requestId", requestId);
@@ -50,13 +49,10 @@ public class RequestLoggingFilter implements WebFilter {
                 .doOnSuccess(v -> {
                     // 計算處理時間
                     Duration duration = Duration.between(startTime, Instant.now());
-                    int status = exchange.getResponse().getStatusCode() != null
-                            ? exchange.getResponse().getStatusCode().value()
-                            : 0;
+                    int status = exchange.getResponse().getStatusCode() != null ? exchange.getResponse().getStatusCode().value() : 0;
 
                     // 記錄請求完成
-                    log.info("[{}] 請求完成 | {} {} | 狀態: {} | 耗時: {}ms | 客戶端: {}",
-                            requestId, method, path, status, duration.toMillis(), clientIp);
+                    log.info("[{}] 請求完成 | {} {} | 狀態: {} | 耗時: {}ms | 客戶端: {}", requestId, method, path, status, duration.toMillis(), clientIp);
                 })
                 .doOnError(e -> {
                     // 計算處理時間

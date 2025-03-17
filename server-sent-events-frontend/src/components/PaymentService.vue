@@ -12,7 +12,7 @@
       </p>
 
       <div v-if="paymentStore.isPaymentSuccess || paymentStore.isPaymentFailure" class="actions">
-        <button @click="paymentStore.resetPayment" class="btn btn-primary">
+        <button @click="resetAndStartNew" class="btn btn-primary">
           開始新的付款
         </button>
       </div>
@@ -86,16 +86,38 @@ const statusClass = computed(() => {
 const startPayment = async () => {
   if (!isValidAmount.value) return;
 
+  console.log('%c 開始付款流程', 'background: #009688; color: white; padding: 2px 5px; border-radius: 2px;', {
+    amount: amount.value
+  });
+
   // 初始化付款
   const paymentUrl = await paymentStore.initializePayment(amount.value);
 
   if (paymentUrl) {
+    console.log('%c 獲得付款 URL', 'background: #8BC34A; color: white; padding: 2px 5px; border-radius: 2px;', {
+      paymentUrl
+    });
+    
     // 開始監聽付款事件
     paymentStore.startListeningForPaymentEvents();
 
     // 開啟第三方付款頁面
     window.open(`http://localhost:8080${paymentUrl}`, '_blank');
+  } else {
+    console.error('%c 付款初始化失敗', 'background: #F44336; color: white; padding: 2px 5px; border-radius: 2px;');
   }
+};
+
+// 重置付款並開始新付款
+const resetAndStartNew = () => {
+  console.log('%c 重置付款狀態', 'background: #FF5722; color: white; padding: 2px 5px; border-radius: 2px;', {
+    orderId: paymentStore.currentOrderId,
+    status: paymentStore.paymentStatus,
+    message: paymentStore.paymentMessage
+  });
+  paymentStore.resetPayment();
+  // 不需要立即開始新的付款，只需要清除當前付款狀態
+  // 如果用戶想要創建新付款，他們可以填寫表單並點擊付款按鈕
 };
 
 // 生命週期鉤子
