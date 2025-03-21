@@ -85,9 +85,9 @@ public class PaymentController {
             return ResponseEntity.badRequest().body("無效的訂單");
         }
 
-//        // 更新訂單狀態
-//        String previousStatus = orderStatus.put(orderId, status);
-//        log.info("訂單狀態更新, 訂單ID: {}, 舊狀態: {}, 新狀態: {}", orderId, previousStatus, status);
+        // 更新訂單狀態
+        String previousStatus = orderStatus.put(orderId, status);
+        log.info("訂單狀態更新, 訂單ID: {}, 舊狀態: {}, 新狀態: {}", orderId, previousStatus, status);
 
         // 發布事件通知前端
         if ("SUCCESS".equals(status)) {
