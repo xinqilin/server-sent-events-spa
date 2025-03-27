@@ -36,12 +36,12 @@ public class SseController {
         String clientIp = exchange.getRequest().getRemoteAddress() != null ? exchange.getRequest().getRemoteAddress().getHostString() : "unknown";
         String userAgent = exchange.getRequest().getHeaders().getFirst("User-Agent");
 
-        // 計算並記錄活躍連接數
+        // 計算並 log
         int currentConnections = activeConnections.incrementAndGet();
 
         log.info("SSE 連接已建立, 連接ID: {}, 客戶端: {}, User-Agent: {}, current 連接數: {}", connectionId, clientIp, userAgent, currentConnections);
 
-        // 創建心跳事件流，每30秒發送一次心跳以保持連接
+        // 創建 heartbeat，每30秒發送一次保持連接
         Flux<ServerSentEvent<PaymentEvent>> heartbeat = Flux.interval(Duration.ofSeconds(30))
                 .map(tick -> ServerSentEvent.<PaymentEvent>builder()
                         .id(String.valueOf(tick))
@@ -59,15 +59,11 @@ public class SseController {
                         .build()
                 );
 
-        // 合併心跳和支付事件流
-        Flux<ServerSentEvent<PaymentEvent>> combinedFlux = Flux.merge(
-                paymentEvents,
-                heartbeat
-        );
+        // 合併 heartbeat 和 event 事件流
+        Flux<ServerSentEvent<PaymentEvent>> combinedFlux = Flux.merge(paymentEvents, heartbeat);
 
         // 使用 doOnCancel 和 doFinally 來追蹤連接關閉情況
         return combinedFlux
-                // 記錄每個事件的發送
                 .doOnNext(event -> {
                     log.debug("SSE 事件發送, 連接ID: {}, 事件類型: {}, 訂單ID: {}, 狀態: {}",
                             connectionId,
@@ -75,13 +71,11 @@ public class SseController {
                             event.data() != null ? event.data().orderId() : "null",
                             event.data() != null ? event.data().status() : "null");
                 })
-                // 記錄連接取消
                 .doOnCancel(() -> {
                     int remaining = activeConnections.decrementAndGet();
                     log.info("SSE 連接被取消, 連接ID: {}, 客戶端: {}, 剩餘活躍連接數: {}",
                             connectionId, clientIp, remaining);
                 })
-                // 記錄連接異常
                 .doOnError(error -> {
                     log.error("SSE 連接發生錯誤, 連接ID: {}, 客戶端: {}, 錯誤: {}",
                             connectionId, clientIp, error.getMessage(), error);
@@ -96,7 +90,7 @@ public class SseController {
                 });
     }
 
-    // 獲取當前活躍的 SSE 連接數量（用於監控與調試）
+    // 獲取當前 active 的 SSE 連接數量（用於監控）
     @GetMapping("/connections")
     public Map<String, Integer> getActiveConnections() {
         int count = activeConnections.get();

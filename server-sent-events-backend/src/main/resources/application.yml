@@ -17,7 +17,6 @@ spring:
     ansi:
       enabled: ALWAYS  # 啟用 ANSI 顏色輸出
 
-# 日誌配置
 logging:
   level:
     root: INFO

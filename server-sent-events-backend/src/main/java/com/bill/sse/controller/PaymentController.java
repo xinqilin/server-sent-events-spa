@@ -26,7 +26,7 @@ public class PaymentController {
     // 儲存訂單狀態（實際系統應該用資料庫）
     private final Map<String, String> orderStatus = new ConcurrentHashMap<>();
 
-    // 初始化付款
+    // init 付款
     @PostMapping("/initialize")
     public ResponseEntity<Map<String, Object>> initializePayment(@RequestBody Map<String, Object> paymentRequest, ServerWebExchange exchange) {
 
@@ -38,7 +38,6 @@ public class PaymentController {
         // 模擬建立訂單
         String orderId = UUID.randomUUID().toString();
 
-        // 安全地處理金額，支援多種數字類型轉換為 BigDecimal
         BigDecimal amount;
         Object amountObj = paymentRequest.getOrDefault("amount", new BigDecimal("100.00"));
 
@@ -70,7 +69,7 @@ public class PaymentController {
         return ResponseEntity.ok(responseData);
     }
 
-    // 第三方付款回調介面（模擬）
+    // 第三方付款 callback 介面（模擬）
     @PostMapping("/callback")
     public ResponseEntity<String> paymentCallback(@RequestBody Map<String, String> callbackData, ServerWebExchange exchange) {
 

@@ -1,9 +1,5 @@
 package com.bill.sse.vo;
 
-/**
- * 支付事件記錄類，使用 Java Record 特性
- * 包含支付事件的類型、訂單ID、狀態、消息和時間戳
- */
 public record PaymentEvent(
         String eventType,
         String orderId,

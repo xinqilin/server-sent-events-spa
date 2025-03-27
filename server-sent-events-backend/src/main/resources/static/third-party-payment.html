@@ -137,7 +137,7 @@
                 // 禁用按鈕防止重複提交
                 disableButtons();
                 
-                // 發送付款成功的回調請求
+                // 發送付款成功的 callback
                 fetch('/api/payment/callback', {
                     method: 'POST',
                     headers: {

@@ -13,9 +13,6 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.UUID;
 
-/**
- * 請求日誌記錄過濾器，用於記錄所有HTTP請求的詳細資訊
- */
 //@Component
 //@Order(1)
 @Slf4j
@@ -47,18 +44,14 @@ public class RequestLoggingFilter implements WebFilter {
         // 繼續請求處理，並在完成後記錄結束資訊
         return chain.filter(exchange)
                 .doOnSuccess(v -> {
-                    // 計算處理時間
                     Duration duration = Duration.between(startTime, Instant.now());
                     int status = exchange.getResponse().getStatusCode() != null ? exchange.getResponse().getStatusCode().value() : 0;
 
-                    // 記錄請求完成
                     log.info("[{}] 請求完成 | {} {} | 狀態: {} | 耗時: {}ms | 客戶端: {}", requestId, method, path, status, duration.toMillis(), clientIp);
                 })
                 .doOnError(e -> {
-                    // 計算處理時間
                     Duration duration = Duration.between(startTime, Instant.now());
 
-                    // 記錄請求錯誤
                     log.error("[{}] 請求出錯 | {} {} | 耗時: {}ms | 客戶端: {} | 錯誤: {}",
                             requestId, method, path, duration.toMillis(), clientIp, e.getMessage(), e);
                 });

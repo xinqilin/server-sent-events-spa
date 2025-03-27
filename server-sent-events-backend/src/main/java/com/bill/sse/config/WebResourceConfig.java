@@ -14,14 +14,12 @@ public class WebResourceConfig implements WebFluxConfigurer {
 
     @Override
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
-        // 為所有 /**路徑設置靜態資源位置
         registry.addResourceHandler("/**")
                 .addResourceLocations("classpath:/static/");
     }
     
     @Bean
     public RouterFunction<ServerResponse> htmlRouter() {
-        // 特別處理第三方付款頁面
         return RouterFunctions.resources("/third-party-payment.html", new ClassPathResource("static/"));
     }
 }
